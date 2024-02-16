@@ -2,15 +2,15 @@ const quiz = {
   questions: [
     {
       question:
-        "Which function is used to serialize an object into a JSON string in Javascript?",
+        "I ______ bus on Mondays.",
       choices: [
-        "welcome to thehhihg ieh iuh i hate you reqruiters an sdfsdf s fs dfsdfd other who created such thing at all",
-        "parse()",
-        "convert()",
-        "None of the above",
+        "'m going to work with",
+        "'m going to work by",
+        "go to work with",
+        "go to work by",
       ],
       type: "MCQs",
-      correctAnswer: "stringify()",
+      correctAnswer: "go to work by",
     },
     {
       question:
