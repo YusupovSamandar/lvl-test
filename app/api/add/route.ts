@@ -8,6 +8,7 @@ const auth = new google.auth.GoogleAuth({
   scopes: "https://www.googleapis.com/auth/spreadsheets",
 });
 export async function POST(req: Request) {
+  
   const { userData } = await req.json(); // Assuming your request body contains a 'messages' field
 
   const authClient = await auth.getClient();
@@ -18,7 +19,7 @@ export async function POST(req: Request) {
   const response = await sheets.spreadsheets.values.append({
     auth,
     spreadsheetId,
-    range: "testing!A:E",
+    range: "testing!A:F",
     valueInputOption: "USER_ENTERED",
     resource: {
       values: [userData],

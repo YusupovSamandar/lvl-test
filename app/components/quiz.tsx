@@ -12,49 +12,82 @@ export default function SevenSecondQuiz() {
     score: 0,
     correctAnswers: 0,
     wrongAnswers: 0,
+    detailedCorrectAnswers: { a2: 0, b1: 0, b2: 0 },
   });
 
   const { questions } = quiz;
-  const { question, choices, correctAnswer } = questions[activeQuestion];
+
+  const {
+    question,
+    choices,
+    correctAnswer,
+    type: questionType,
+  } = questions[activeQuestion];
+
+  const sendResults = async () => {
+    setActiveQuestion(0);
+    setShowResult(true);
+    const lastResults = selectedAnswer
+      ? {
+          ...result,
+          score: result.score + 5,
+          correctAnswers: result.correctAnswers + 1,
+          detailedCorrectAnswers: {
+            ...result.detailedCorrectAnswers,
+            [questionType]: result.detailedCorrectAnswers[questionType] + 1,
+          },
+        }
+      : { ...result, wrongAnswers: result.wrongAnswers + 1 };
+    const studentResult = `A2: ${lastResults.detailedCorrectAnswers.a2}; B1: ${lastResults.detailedCorrectAnswers.b1}; B2: ${lastResults.detailedCorrectAnswers.b2}`;
+    const today = new Date();
+    const options = {
+      year: "numeric",
+      month: "short",
+      day: "numeric",
+    } as Intl.DateTimeFormatOptions;
+    const shortDateFormat = today.toLocaleDateString("en-US", options);
+    const sendingResult = [
+      sessionStorage.getItem("firstName"),
+      sessionStorage.getItem("lastName"),
+      sessionStorage.getItem("phoneNumber"),
+      studentResult,
+      Math.round((lastResults.correctAnswers / questions.length) * 100) + "%",
+      shortDateFormat,
+    ];
+    const { data } = await axios.post("/api/add", {
+      userData: sendingResult,
+    });
+    sessionStorage.clear();
+  };
 
   const onClickNext = () => {
     setSelectedAnswerIndex(null);
+    if (activeQuestion !== questions.length - 1) {
+      if(activeQuestion <= 11 && result.wrongAnswers > (selectedAnswer ? 2 : 1)) {
+        sendResults();
+      }else if (activeQuestion <= 23 && result.wrongAnswers > (selectedAnswer ? 4 : 3)) {
+        sendResults();
+      }else if (activeQuestion <= 35 && result.wrongAnswers > (selectedAnswer ? 6 : 5)) {
+        sendResults();
+      }else {
+        setActiveQuestion((prev) => prev + 1);
+      }
+    } else {
+      sendResults();
+    }
     setResult((prev) =>
       selectedAnswer
         ? {
             ...prev,
             score: prev.score + 5,
             correctAnswers: prev.correctAnswers + 1,
+            detailedCorrectAnswers: {
+              ...prev.detailedCorrectAnswers,
+              [questionType]: prev.detailedCorrectAnswers[questionType] + 1,
+            },
           }
         : { ...prev, wrongAnswers: prev.wrongAnswers + 1 }
     );
-    if (activeQuestion !== questions.length - 1) {
-      setActiveQuestion((prev) => prev + 1);
-    } else {
-      setActiveQuestion(0);
-      setShowResult(true);
-      const studentResult = `${result.correctAnswers}/${questions.length}`;
-      const today = new Date();
-      const options = {
-        year: "numeric",
-        month: "short",
-        day: "numeric",
-      } as Intl.DateTimeFormatOptions;
-      const shortDateFormat = today.toLocaleDateString("en-US", options);
-      (async function () {
-        const sendingResult = [
-          sessionStorage.getItem("firstName"),
-          sessionStorage.getItem("lastName"),
-          sessionStorage.getItem("phoneNumber"),
-          studentResult,
-          shortDateFormat,
-        ];
-        const { data } = await axios.post("/api/add", {
-          userData: sendingResult,
-        });
-        sessionStorage.clear();
-      })();
-    }
   };
 
   const onAnswerSelected = (answer: string, index: any) => {
@@ -82,8 +115,13 @@ export default function SevenSecondQuiz() {
                 /{addLeadingZero(questions.length)}
               </span>
             </div>
+            <div>
+              <span className="active-question-no">
+                {questionType.toUpperCase()}
+              </span>
+            </div>
           </div>
-          <h2>{question}</h2>
+          <h2 style={{whiteSpace: 'pre-line'}}>{question}</h2>
           <ul>
             {choices.map((answer, index) => (
               <li
